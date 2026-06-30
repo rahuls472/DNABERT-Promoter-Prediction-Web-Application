@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Promoter Prediction | Deep Learning</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header>
+
+        <div class="logo">
+
+            <div>
+                <h2>GenomePromoter</h2>
+                <p>Deep Learning Promoter Prediction</p>
+            </div>
+
+        </div>
+
+        <a href="https://github.com/rahuls472" class="github" target="_blank">
+            GitHub
+        </a>
+
+    </header>
+
+    <!-- ================= MAIN ================= -->
+
+    <section class="container">
+
+        <!-- Left Side -->
+
+        <div class="hero">
+
+            <h1>
+
+                Predict
+                <span>Promoter Regions</span>
+                from DNA Sequences
+
+            </h1>
+
+            <p>
+
+                Upload a FASTA file or paste a DNA sequence below.
+                Our deep learning model classifies whether the submitted
+                sequence represents a <strong>Promoter</strong> or
+                <strong>Non-Promoter</strong>.
+
+            </p>
+
+            <div class="dna">
+
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+
+            </div>
+
+        </div>
+
+        <!-- ================= Prediction Card ================= -->
+
+        <div class="card">
+
+            <h3>Submit DNA Sequence</h3>
+
+            <form
+                action="/predict"
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                <!-- Textarea -->
+
+                <label>Paste DNA Sequence</label>
+
+                <textarea
+                    id="sequence"
+                    name="sequence"
+                    placeholder="Example:
+
+                    ATGCGTATCGATCGATCGATCGATCGATCGATCGATCGATCG"
+                    onkeyup="updateCounter()"
+                ></textarea>
+
+                <div class="counter">
+
+                    <span id="bp">0 bp</span>
+
+                    <span id="seq">0 Sequence</span>
+
+                </div>
+
+                <div class="or">
+
+                    OR
+
+                </div>
+
+                <!-- File Upload -->
+
+                <label class="file-box">
+
+                    <input
+                        type="file"
+                        id="file"
+                        name="file"
+                        accept=".fa,.fasta,.txt"
+                        onchange="showFileName()"
+                    >
+
+                    <h4>
+
+                        Upload FASTA File
+
+                    </h4>
+
+                    <p>
+
+                        Supported formats:
+                        .fa .fasta .txt
+
+                    </p>
+
+                    <div
+                        class="filename"
+                        id="filename"
+                    >
+
+                    </div>
+
+                </label>
+
+                <!-- Submit -->
+
+                <button
+                    class="predict-btn"
+                    type="submit"
+                >
+
+                    Predict Promoter
+
+                </button>
+
+            </form>
+
+            <!-- Loading Animation -->
+
+            <div
+                class="loading"
+                id="loading"
+            >
+
+                <div class="spinner"></div>
+
+                <p>
+
+                    Running Deep Learning Model...
+
+                </p>
+
+            </div>
+
+            <!-- Flask Prediction -->
+
+            {% if prediction %}
+
+            <div class="result" style="display:block;">
+
+                <div class="result-card">
+
+                    <h2>
+
+                        Prediction Result
+
+                    </h2>
+
+                    <div class="prediction">
+
+                        {{ prediction }}
+
+                    </div>
+
+                    {% if confidence %}
+
+                    <div class="confidence">
+
+                        Confidence :
+                        {{ confidence }} %
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer>
+
+        © 2026 Rahul Kumar Singh |
+        Promoter Prediction using Deep Learning
+
+    </footer>
+
+    <!-- ================= JavaScript ================= -->
+
+    <script>
+
+        function updateCounter(){
+
+            let txt=document.getElementById("sequence").value;
+
+            let bp=txt.replace(/[^ATGCatgc]/g,"").length;
+
+            let seq=(txt.match(/^>/gm)||[]).length;
+
+            if(bp>0 && seq===0){
+
+                seq=1;
+
+            }
+
+            document.getElementById("bp").innerHTML=bp+" bp";
+
+            document.getElementById("seq").innerHTML=seq+" Sequence";
+
+        }
+
+        function showFileName(){
+
+            let file=document.getElementById("file");
+
+            if(file.files.length>0){
+
+                document.getElementById("filename").innerHTML=file.files[0].name;
+
+            }
+
+        }
+
+        document.querySelector("form").addEventListener("submit",function(){
+
+            document.getElementById("loading").style.display="block";
+
+        });
+
+    </script>
+
+</body>
+
+</html>

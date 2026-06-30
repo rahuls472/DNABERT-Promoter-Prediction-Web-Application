@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --paper: #F6F4EE;
+            --ink: #1C1B19;
+            --ink-soft: #6B6862;
+            --rule: #D8D4C8;
+            --signal: #2E5E4E;
+            --signal-soft: #E4ECE7;
+            --error: #A8362B;
+            --error-soft: #F6E9E6;
+            --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+            --serif: 'IBM Plex Serif', Georgia, serif;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            background-image:
+                linear-gradient(var(--rule) 1px, transparent 1px);
+            background-size: 100% 32px;
+            color: var(--ink);
+            font-family: var(--serif);
+            padding: 56px 24px 80px;
+        }
+
+        .sheet {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .masthead {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 2px solid var(--ink);
+            padding-bottom: 14px;
+            margin-bottom: 6px;
+        }
+
+        .masthead .tag {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+        }
+
+        h1 {
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 30px;
+            letter-spacing: -0.01em;
+            margin: 18px 0 4px;
+        }
+
+        .subhead {
+            font-family: var(--mono);
+            font-size: 12.5px;
+            color: var(--ink-soft);
+            margin: 0 0 36px;
+            border-bottom: 1px solid var(--rule);
+            padding-bottom: 24px;
+        }
+
+        .error-block {
+            background: var(--error-soft);
+            border-left: 3px solid var(--error);
+            padding: 16px 18px;
+            margin-bottom: 28px;
+        }
+
+        .error-block .label {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--error);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .error-block p {
+            margin: 0;
+            color: var(--error);
+            font-family: var(--mono);
+            font-size: 13.5px;
+            line-height: 1.5;
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin: 0 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--rule);
+        }
+
+        /* Single result — featured readout */
+        .readout {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 0;
+            border: 1px solid var(--ink);
+            margin-bottom: 44px;
+        }
+
+        .readout-cell {
+            padding: 22px 24px;
+            border-right: 1px solid var(--rule);
+        }
+
+        .readout-cell:last-child { border-right: none; }
+
+        .readout-cell .k {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-bottom: 8px;
+        }
+
+        .readout-cell .v {
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--signal);
+        }
+
+        .readout-cell.metric .v {
+            font-family: var(--mono);
+            color: var(--ink);
+        }
+
+        /* Results table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 44px;
+            font-family: var(--mono);
+            font-size: 13px;
+        }
+
+        thead th {
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            font-weight: 500;
+            padding: 0 14px 10px;
+            border-bottom: 2px solid var(--ink);
+        }
+
+        tbody td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--rule);
+            color: var(--ink);
+        }
+
+        tbody tr:hover {
+            background: var(--signal-soft);
+        }
+
+        tbody td:first-child {
+            color: var(--ink-soft);
+        }
+
+        td.prediction {
+            color: var(--signal);
+            font-weight: 600;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            letter-spacing: 0.04em;
+            color: var(--ink);
+            text-decoration: none;
+            border-bottom: 1px solid var(--ink);
+            padding-bottom: 2px;
+            transition: opacity 0.15s ease;
+        }
+
+        .back-link:hover { opacity: 0.6; }
+
+        @media (max-width: 560px) {
+            .readout { grid-template-columns: 1fr; }
+            .readout-cell { border-right: none; border-bottom: 1px solid var(--rule); }
+            .readout-cell:last-child { border-bottom: none; }
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            tbody td {
+                display: flex;
+                justify-content: space-between;
+                border-bottom: none;
+                padding: 6px 14px;
+            }
+            tbody tr {
+                border-bottom: 1px solid var(--rule);
+                padding: 10px 0;
+            }
+            tbody td::before {
+                content: attr(data-label);
+                color: var(--ink-soft);
+                margin-right: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="sheet">
+
+    <div class="masthead">
+        <span class="tag">Sequence Lab</span>
+        <span class="tag">Readout</span>
+    </div>
+
+    <h1>Prediction Results</h1>
+    <p class="subhead">Output from the DNABERT Promoter Classification Model</p>
+
+    {% if error %}
+    <div class="error-block">
+        <span class="label">Error</span>
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+
+    <!-- ===================== -->
+    <!-- Single Sequence Result -->
+    <!-- ===================== -->
+
+    {% if single_result %}
+
+    <p class="section-label">Single Sequence</p>
+
+    <div class="readout">
+
+        <div class="readout-cell">
+            <div class="k">Prediction</div>
+            <div class="v">{{ single_result.prediction }}</div>
+        </div>
+
+        <div class="readout-cell metric">
+            <div class="k">Confidence</div>
+            <div class="v">{{ single_result.confidence }}%</div>
+        </div>
+
+        <div class="readout-cell metric">
+            <div class="k">Length</div>
+            <div class="v">{{ single_result.length }} bp</div>
+        </div>
+
+    </div>
+
+
+    <p class="section-label">Sequence Statistics</p>
+
+    <table>
+        <tbody>
+
+            <tr>
+                <th>A</th>
+                <td>{{ single_result.A }}</td>
+
+                <th>T</th>
+                <td>{{ single_result.T }}</td>
+            </tr>
+
+            <tr>
+                <th>G</th>
+                <td>{{ single_result.G }}</td>
+
+                <th>C</th>
+                <td>{{ single_result.C }}</td>
+            </tr>
+
+            <tr>
+                <th>AT Content</th>
+                <td>{{ single_result.AT_percent }}%</td>
+
+                <th>GC Content</th>
+                <td>{{ single_result.GC_percent }}%</td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    {% endif %}
+
+
+
+    <!-- ===================== -->
+    <!-- FASTA Batch Results -->
+    <!-- ===================== -->
+
+    {% if results %}
+
+    <p class="section-label">Batch Results</p>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+
+                <th>Length</th>
+
+                <th>A</th>
+
+                <th>T</th>
+
+                <th>G</th>
+
+                <th>C</th>
+
+                <th>AT%</th>
+
+                <th>GC%</th>
+
+                <th>Prediction</th>
+
+                <th>Confidence</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for row in results %}
+
+            <tr>
+
+                <td>{{ row.id }}</td>
+
+                <td>{{ row.length }}</td>
+
+                <td>{{ row.A }}</td>
+
+                <td>{{ row.T }}</td>
+
+                <td>{{ row.G }}</td>
+
+                <td>{{ row.C }}</td>
+
+                <td>{{ row.AT_percent }}%</td>
+
+                <td>{{ row.GC_percent }}%</td>
+
+                <td class="prediction">
+
+                    {% if row.prediction == "Promoter" %}
+
+                        <span class="badge promoter">
+                            🟢 {{ row.prediction }}
+                        </span>
+
+                    {% elif row.prediction == "Non-Promoter" %}
+
+                        <span class="badge non-promoter">
+                            🔴 {{ row.prediction }}
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge invalid">
+                            {{ row.prediction }}
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    {% if row.confidence != "-" %}
+
+                        {{ row.confidence }}%
+
+                    {% else %}
+
+                        -
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% endif %}
+
+
+    <a href="/" class="back-link">
+        ← Predict Another Sequence
+    </a>
+
+</div>
+</body>
+</html>
